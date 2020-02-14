@@ -1,5 +1,5 @@
 # mule4-max_concurrency_poc
-A Mule 4.x project to test flow max concurrency
+A Mulesoft 4.x project to test flow max concurrency
 
 This was created as a proof that there is an issue with Mule Runtime v4.2.2 not honoring max concurrency for flows. 
 

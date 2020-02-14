@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4f9f4ffe-4d45-4b67-9a04-8303449f355a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="waitFlow" doc:id="49188911-8978-4dd5-9842-6c0a2cd85c75" maxConcurrency="1">
+		<http:listener doc:name="POST /maxconcurpoc1" doc:id="5016dd9f-7b4e-4f80-890d-e5e53b5beb56" config-ref="HTTP_Listener_config" path="/maxconcurpoc1" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Wait Flow started" doc:id="6e5cd86f-79e4-425a-8cf5-932e73c5efd0" message="Wait Flow started"/>
+		<logger level="INFO" doc:name="Waiting for X seconds" doc:id="761c0197-3869-4ae3-bd0e-fa927526c950" message='#["Waiting for " ++ ((payload.wait_seconds default 0) as String) ++ " seconds; Caller is " ++ (payload.caller default "&lt;null&gt;")]'/>
+		<ee:transform doc:name="wait via dataweave" doc:id="8376db14-bd5c-4c65-ae86-242f6707487c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::Runtime
+var wait_millisec = (payload.wait_seconds default 0) * 1000
+output application/json 
+--- 
+{
+	"waiting for millisec":wait_millisec,
+	"eventId":correlationId
+}
+wait wait_millisec]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Wait Flow completed" doc:id="31dce9c8-bf3b-4a23-9d06-749d24459063" message="Wait Flow completed"/>
+	</flow>
+	<flow name="maxconcurpocFlow_Sched1" doc:id="d3b748c8-7009-42d1-83c7-2b6170947caf" >
+		<scheduler doc:name="Sched Every 20s (3s delay)" doc:id="cbb9ef8f-d6c0-4d30-bee7-6d6b55e8e965" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="20" startDelay="3" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Sched1 Flow Start" doc:id="6ebfef70-9cb2-4e54-b830-9d5713eb7bf1" message="Sched1 Flow Start"/>
+		<set-payload value='#[%dw 2.0 output application/java --- {"wait_seconds":25,"caller":"Sched1"}]' doc:name='Set Payload {"wait_seconds":25}' doc:id="39d56a96-a0c5-42db-bebc-730ac85be1bf" />
+		<flow-ref doc:name="Flow Reference" doc:id="1c774a8b-3305-46de-8e93-0c59a08ead77" name="waitFlow"/>
+		<logger level="INFO" doc:name="Sched1 Flow End" doc:id="af16c574-e1fd-4cbb-8ebc-406694e67f3d" message="Sched1 Flow End"/>
+	</flow>
+	<flow name="maxconcurpocFlow_Sched2" doc:id="51846527-1806-442b-8b57-f31660f9e411" >
+		<scheduler doc:name="Sched Every 20s (6s delay)" doc:id="b4bc6a9f-ba05-45bf-8f74-435b52bd992d" >
+			<scheduling-strategy >
+				<fixed-frequency timeUnit="SECONDS" startDelay="6" frequency="20"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Sched2 Flow Start" doc:id="708f9c8e-23a3-4a94-bb35-e5a3bbc9e10e" message="Sched2 Flow Start"/>
+		<set-payload value='#[%dw 2.0 output application/java --- {"wait_seconds":0,"caller":"Sched2"}]' doc:name='Set Payload {"wait_seconds":0}' doc:id="1ea341e0-96dd-4e94-916f-6c91b86a8a10" />
+		<flow-ref doc:name="Flow Reference" doc:id="bbe1d312-a9c3-4fd1-96ea-3a2ee4edcebd" name="waitFlow"/>
+		<logger level="INFO" doc:name="Sched2 Flow End" doc:id="232f8a97-83a4-435b-a5be-4764f03e57a6" message="Sched2 Flow End"/>
+	</flow>
+</mule>

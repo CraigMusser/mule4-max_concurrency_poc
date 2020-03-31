@@ -9,7 +9,7 @@ If this project is run using Mule Runtime 4.2.1 (v7.3.3.201911131613), then the 
 
 If this project is run using Mule Runtime 4.2.2 (v7.3.5.201911202039), the log will show new instances of waitFlow will start without regard to any currently executing instances.
 
-##Resolution
+## Resolution
 
 Mulesoft support provided a patch (SE-15269-4.2.2-1.0) for this that resolved the issue.
 They have advised that this patch will be rolled into engine versions 4.2.3 and 4.3.0.
